@@ -18,6 +18,6 @@ public class User {
     private final String login;
     private final LocalDate birthday;
     @PositiveOrZero
-    private int id;
+    private Long id;
     private String name;
 }

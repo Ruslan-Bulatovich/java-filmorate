@@ -16,10 +16,10 @@ import java.util.Map;
 @RequestMapping("/films")
 public class FilmController {
     private static final LocalDate DATA_OF_FIRST_FILM = LocalDate.of(1895, 12, 28);
-    private final Map<Integer, Film> films = new HashMap<>();
-    private int generatedId = 0;
+    private final Map<Long, Film> films = new HashMap<>();
+    private Long generatedId = 0L;
 
-    private int createId() {
+    private Long createId() {
         return ++generatedId;
     }
 
@@ -41,12 +41,11 @@ public class FilmController {
     @PutMapping
     public Film updateFilm(@Valid @RequestBody Film film) {
         log.info("Запрос PUT /films " + film);
-        validateDate(film);
-        if (films.containsKey(film.getId())) {
-            films.put(film.getId(), film);
-        } else {
+        if (!(films.containsKey(film.getId()))){
             throw new ValidationException("Фильм не найден");
         }
+        validateDate(film);
+        films.put(film.getId(), film);
         return film;
     }
 

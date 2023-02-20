@@ -15,10 +15,10 @@ import java.util.Map;
 @RestController
 @RequestMapping("/users")
 public class UserController {
-    private final Map<Integer, User> users = new HashMap<>();
-    private int generatedId = 0;
+    private final Map<Long, User> users = new HashMap<>();
+    private Long generatedId = 0L;
 
-    private int createId() {
+    private Long createId() {
         return ++generatedId;
     }
 

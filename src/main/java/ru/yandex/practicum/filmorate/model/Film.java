@@ -16,5 +16,5 @@ public class Film {
     @Positive
     private final int duration;
     @PositiveOrZero
-    private int id;
+    private Long id;
 }
