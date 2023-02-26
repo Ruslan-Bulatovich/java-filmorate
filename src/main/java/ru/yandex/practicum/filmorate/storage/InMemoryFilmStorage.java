@@ -7,6 +7,7 @@ import ru.yandex.practicum.filmorate.model.Film;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -42,34 +43,34 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
-    public Film updateFilm(Film film) {
+    public Optional<Film> updateFilm(Film film) {
         log.info("Запрос PUT /films " + film);
         if (!(films.containsKey(film.getId()))) {
-            return null;
+            return Optional.empty();
         }
         films.put(film.getId(), film);
-        return film;
+        return Optional.of(film);
     }
 
     @Override
-    public Film getFilmById(Long id) {
+    public Optional<Film> getFilmById(Long id) {
         log.info("Запрос GET /films по Id: {}", +id);
         if (!(films.containsKey(id))) {
-            return null;
+            return Optional.empty();
         }
         Film film = films.get(id);
-        return film;
+        return Optional.of(film);
     }
 
     @Override
-    public Film deleteFilmById(Long id) {
+    public Optional<Film> deleteFilmById(Long id) {
         log.info("Запрос DELETE /films по Id: {}", +id);
         if (!(films.containsKey(id))) {
-            return null;
+            return Optional.empty();
         }
         Film film = films.get(id);
         films.remove(id);
-        return film;
+        return Optional.of(film);
     }
 
 

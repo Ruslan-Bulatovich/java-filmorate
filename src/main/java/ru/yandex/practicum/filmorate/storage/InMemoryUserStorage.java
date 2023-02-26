@@ -7,6 +7,7 @@ import ru.yandex.practicum.filmorate.model.User;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 @Slf4j
 @Component
@@ -34,34 +35,34 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
-    public User updateUser(User user) {
+    public Optional<User> updateUser(User user) {
         log.info("Запрос PUT /users " + user);
         if (!(users.containsKey(user.getId()))) {
-            return null;
+            return Optional.empty();
         }
         users.put(user.getId(), user);
-        return user;
+        return Optional.of(user);
     }
 
     @Override
-    public User getUserById(Long id) {
+    public Optional<User> getUserById(Long id) {
         log.info("Запрос GET /users по Id: {}", +id);
         if (!(users.containsKey(id))) {
-            return null;
+            return Optional.empty();
         }
         User user = users.get(id);
-        return user;
+        return Optional.of(user);
     }
 
     @Override
-    public User deleteUserById(Long id) {
+    public Optional<User> deleteUserById(Long id) {
         log.info("Запрос DELETE /users по Id: {}", +id);
         if (!(users.containsKey(id))) {
-            return null;
+            return Optional.empty();
         }
         User user = users.get(id);
         users.remove(id);
-        return user;
+        return Optional.of(user);
 
     }
 }

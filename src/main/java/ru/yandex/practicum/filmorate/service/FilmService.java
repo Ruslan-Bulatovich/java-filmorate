@@ -12,6 +12,7 @@ import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.time.LocalDate;
 import java.util.Collection;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -32,27 +33,31 @@ public class FilmService {
 
     public Film updateFilm(Film film) {
         validateDate(film);
-        Film updatedFilm = filmStorage.updateFilm(film);
-        if (updatedFilm == null) {
+        Optional<Film> updatedFilm = filmStorage.updateFilm(film);
+        if (!updatedFilm.isPresent()) {
             throw new ObjectNotFoundException("Невозможно обновить данные несуществующего фильма");
         }
-        return updatedFilm;
+        return updatedFilm.get();
     }
 
     public Film getFilmById(Long id) {
-        Film film = filmStorage.getFilmById(id);
-        if (film == null) {
+        Optional <Film> film = filmStorage.getFilmById(id);
+        if (!film.isPresent()) {
             throw new ObjectNotFoundException("Фильм с id=" + id + " не найден");
         }
-        return film;
+        return film.get();
     }
 
     public Film deleteFilmById(Long id) {
-        return filmStorage.deleteFilmById(id);
+        Optional <Film> film = filmStorage.deleteFilmById(id);
+        if (!film.isPresent()) {
+            throw new ObjectNotFoundException("Фильм с id=" + id + " не найден");
+        }
+        return film.get();
     }
 
 
-    private void validateDate(Film film) throws ValidationException {
+    private void validateDate(Film film) {
         if (film.getReleaseDate().isBefore(DATA_OF_FIRST_FILM)) {
             log.debug("Введена неверная дата релиза (раньше 1895-12-28)");
             throw new ValidationException("Введена неверная дата релиза (раньше 1895-12-28)");
@@ -64,11 +69,8 @@ public class FilmService {
         if (userStorage.getUserById(userId) == null) {
             throw new ObjectNotFoundException("Пользователь с ID: " + userId + " не найден");
         }
-        User user = userStorage.getUserById(userId);
-        if (filmStorage.getFilmById(filmId) == null) {
-            throw new ObjectNotFoundException("Пользователь с ID: " + filmId + " не найден");
-        }
-        Film film = filmStorage.getFilmById(filmId);
+        User user = userStorage.getUserById(userId).get();
+        Film film = getFilmById(filmId);
 
         film.getLikes().add(user.getId());
         return film;
