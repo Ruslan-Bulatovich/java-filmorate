@@ -7,6 +7,8 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.PositiveOrZero;
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
 
 @Data
 public class User {
@@ -20,4 +22,5 @@ public class User {
     @PositiveOrZero
     private Long id;
     private String name;
+    private Set<Long> friends = new HashSet<>();
 }
