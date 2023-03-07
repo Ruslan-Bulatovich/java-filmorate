@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Primary;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.datasource.DataSourceUtils;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
@@ -13,10 +14,7 @@ import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.storage.StorageDb;
 
-import java.sql.Date;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
@@ -58,9 +56,8 @@ public class FilmDbStorage implements FilmStorage, StorageDb {
             return stmt;
         }, generatedId);
         film.setId((long) Objects.requireNonNull(generatedId.getKey()).intValue());
-        for (Genre genre : emptyIfNull(film.getGenres())) {
-            updateIgnoreDuplicate(sqlGenreQuery, film.getId(), genre.getId());
-        }
+
+        addFilmGenres(film, sqlGenreQuery);
 
         if (mpa != null) {
             film.setMpa(findMpa(mpa.getId()));
@@ -200,5 +197,26 @@ public class FilmDbStorage implements FilmStorage, StorageDb {
         return new Film(id, name, description, releaseDate, duration, genres, mpa);
     }
 
+    private void addFilmGenres(Film film, String sqlGenreQuery) {
+        Connection connection = DataSourceUtils.getConnection(jdbcTemplate.getDataSource());
+        try {
+            connection.setAutoCommit(false);
+            PreparedStatement stmtGenre = connection.prepareStatement(sqlGenreQuery);
+            for (Genre genre : emptyIfNull(film.getGenres())) {
+                stmtGenre.setLong(1, film.getId());
+                stmtGenre.setInt(2, genre.getId());
+                stmtGenre.addBatch();
+            }
+            try {
+                stmtGenre.executeBatch();
+                connection.commit();
+            } catch (BatchUpdateException ex) {
+                ex.getMessage();
+                connection.rollback();
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
 }

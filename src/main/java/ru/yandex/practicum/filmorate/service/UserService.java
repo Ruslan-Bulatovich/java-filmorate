@@ -66,6 +66,8 @@ public class UserService {
 
 
     public Boolean addFriendship(Long id, Long friendId) {
+        getUserById(id);
+        getUserById(friendId); // будет ошибка, если не будет найден один из пользователей
         return userStorage.addFriend(id, friendId);
     }
 
