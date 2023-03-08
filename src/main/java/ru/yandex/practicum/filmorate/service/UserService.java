@@ -1,22 +1,26 @@
 package ru.yandex.practicum.filmorate.service;
 
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.Exception.ObjectNotFoundException;
 import ru.yandex.practicum.filmorate.Exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.UserStorage;
+import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 
 @Service
-@RequiredArgsConstructor
 public class UserService {
     private final UserStorage userStorage;
+
+    @Autowired
+    public UserService(@Qualifier("userDbStorage") UserStorage userStorage) {
+        this.userStorage = userStorage;
+    }
 
     private void validate(User user) throws ValidationException {
         if (user.getBirthday().isAfter(LocalDate.now())) {
@@ -25,7 +29,6 @@ public class UserService {
         if (user.getName() == null || user.getName().isBlank()) {
             user.setName(user.getLogin());
         }
-        return;
     }
 
     public Collection<User> findAll() {
@@ -40,10 +43,8 @@ public class UserService {
 
     public User updateUser(User user) {
         validate(user);
+        getUserById(user.getId()); // будет ошибка, если не будет найден пользователь
         Optional<User> updatedUser = userStorage.updateUser(user);
-        if (!updatedUser.isPresent()) {
-            throw new ObjectNotFoundException("Невозможно обновить данные несуществующего пользователя");
-        }
         return updatedUser.get();
     }
 
@@ -65,36 +66,21 @@ public class UserService {
 
 
     public Boolean addFriendship(Long id, Long friendId) {
-        User user = getUserById(id);
-        User newFriend = getUserById(friendId);
-        user.getFriends().add(friendId);
-        newFriend.getFriends().add(id);
-        return true;
+        getUserById(id);
+        getUserById(friendId); // будет ошибка, если не будет найден один из пользователей
+        return userStorage.addFriend(id, friendId);
     }
 
-    public Boolean removeFriendship(Long id, Long friendId){
-        User user = getUserById(id);
-        User removedFriend = getUserById(friendId);
-        if (!user.getFriends().contains(friendId) || !removedFriend.getFriends().contains(id)) {
-            throw new ObjectNotFoundException("Пользователи не являются друзьями");
-        }
-        user.getFriends().remove(friendId);
-        removedFriend.getFriends().remove(id);
-        return true;
+    public Boolean removeFriendship(Long id, Long friendId) {
+        return userStorage.deleteFriend(id, friendId);
     }
 
     public Collection<User> getFriendsListById(Long id) {
-        User user = getUserById(id);
-        return user.getFriends().stream().map(this::getUserById).collect(Collectors.toList());
+        return userStorage.findFriends(id);
     }
 
     public Collection<User> getCommonFriendsList(Long userId, Long friendId) {
-        User user = getUserById(userId);
-        User otherUser = getUserById(friendId);
-        return user.getFriends().stream()
-                .filter(u -> otherUser.getFriends().contains(u))
-                .map(this::getUserById)
-                .collect(Collectors.toList());
+        return userStorage.findCommonFriends(userId, friendId);
     }
 
 

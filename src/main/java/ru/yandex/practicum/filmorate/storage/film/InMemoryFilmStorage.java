@@ -1,14 +1,13 @@
-package ru.yandex.practicum.filmorate.storage;
+package ru.yandex.practicum.filmorate.storage.film;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.model.Film;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
+
+import static ru.yandex.practicum.filmorate.storage.UtilEmpty.emptyIfNull;
 
 @Slf4j
 @Component
@@ -73,5 +72,16 @@ public class InMemoryFilmStorage implements FilmStorage {
         return Optional.of(film);
     }
 
+    @Override
+    public void addLike(Long id, Long userId) {
+        Film film = getFilmById(id).get();
+        Set<Long> likes = emptyIfNull(film.getLikes());
+        likes.add(userId);
+        film.setLikes(likes);
+    }
 
+    @Override
+    public void removeLike(Long filmId, Long userId) {
+        emptyIfNull(getFilmById(filmId).get().getLikes()).remove(userId);
+    }
 }
